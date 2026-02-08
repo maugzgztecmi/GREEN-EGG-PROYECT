@@ -1,0 +1,205 @@
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    DIAGRAMA DE CONEXIONES - ESP32                         ║
+║              Sistema de Monitoreo de Impactos Green Egg                   ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          VISTA GENERAL DEL SISTEMA                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+                    ┌──────────────────┐
+                    │   BATERÍA LiPo   │
+                    │    3.7V 2000mAh  │
+                    └────────┬─────────┘
+                             │
+                    ┌────────▼─────────┐
+                    │                  │
+                    │      ESP32       │
+                    │   DevKit V1      │
+                    │                  │
+                    └──┬────┬────┬────┬┘
+                       │    │    │    │
+        ┌──────────────┘    │    │    └──────────────┐
+        │                   │    │                   │
+┌───────▼────────┐  ┌───────▼────▼──────┐  ┌────────▼────────┐
+│   ADXL345      │  │   Módulo MicroSD  │  │   LED Indicador │
+│  Acelerómetro  │  │   (Almacenamiento)│  │  (Opcional)     │
+└────────────────┘  └───────────────────┘  └─────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│               CONEXIONES DETALLADAS - ESP32 a ADXL345                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    ADXL345                         ESP32 DevKit
+    ┌─────┐                        ┌──────────┐
+    │ VCC ├────────────────────────┤ 3.3V     │ ← Alimentación 3.3V
+    │ GND ├────────────────────────┤ GND      │ ← Tierra
+    │ SDA ├────────────────────────┤ GPIO 21  │ ← Datos I2C
+    │ SCL ├────────────────────────┤ GPIO 22  │ ← Reloj I2C
+    │ SDO │ (no conectar)           │          │
+    │ CS  │ (no conectar)           │          │
+    └─────┘                        └──────────┘
+
+    NOTAS:
+    • Usar cables cortos (< 20cm) para conexiones I2C
+    • No conectar VCC a 5V - el ADXL345 usa 3.3V
+    • SDO y CS no se usan en modo I2C
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│            CONEXIONES DETALLADAS - ESP32 a Módulo MicroSD               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    Módulo SD                       ESP32 DevKit
+    ┌─────┐                        ┌──────────┐
+    │ VCC ├────────────────────────┤ 3.3V     │ ← Alimentación 3.3V
+    │ GND ├────────────────────────┤ GND      │ ← Tierra
+    │ CS  ├────────────────────────┤ GPIO 5   │ ← Chip Select
+    │MOSI ├────────────────────────┤ GPIO 23  │ ← Master Out Slave In
+    │MISO ├────────────────────────┤ GPIO 19  │ ← Master In Slave Out
+    │ SCK ├────────────────────────┤ GPIO 18  │ ← Serial Clock
+    └─────┘                        └──────────┘
+
+    ⚠ ADVERTENCIA:
+    Verificar que el módulo SD soporte 3.3V
+    Si solo acepta 5V, usar un convertidor de nivel
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    ALIMENTACIÓN Y BATERÍA                                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    Batería LiPo 3.7V
+    ┌──────────┐
+    │    (+)   ├───────┐
+    │          │       │
+    │    (-)   ├───┐   │      ESP32 (puede alimentarse por:)
+    └──────────┘   │   │      • Pin VIN (3.3V - 5V)
+                   │   │      • Puerto USB (5V)
+                   │   │      • Pin 3.3V (regulado)
+                   │   │
+                   │   └──────► VIN del ESP32
+                   └──────────► GND del ESP32
+
+    RECOMENDACIÓN:
+    • Usar batería con circuito de protección (PCB)
+    • Capacidad mínima: 2000mAh para 8-12 horas
+    • Voltaje: 3.7V nominal (4.2V cargada)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       PINOUT COMPLETO ESP32                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+                            ESP32 DevKit V1
+    
+    ┌───────────────────────────────────────────────┐
+    │ 3.3V  ○                                  ○ GND│
+    │ EN    ○                                  ○ D23│ ← MOSI (SD)
+    │ VP    ○                                  ○ D22│ ← SCL (ADXL345)
+    │ VN    ○                                  ○ TX │
+    │ D34   ○                                  ○ RX │
+    │ D35   ○                                  ○ D21│ ← SDA (ADXL345)
+    │ D32   ○                                  ○ D19│ ← MISO (SD)
+    │ D33   ○                                  ○ D18│ ← SCK (SD)
+    │ D25   ○                                  ○ D5 │ ← CS (SD)
+    │ D26   ○                                  ○ D17│
+    │ D27   ○                                  ○ D16│
+    │ D14   ○    ┌─────────────┐              ○ D4 │
+    │ D12   ○    │   ESP32     │              ○ D0 │
+    │ D13   ○    │   WROOM     │              ○ D2 │ ← LED (opcional)
+    │ GND   ○    │   32D       │              ○ D15│
+    │ VIN   ○    └─────────────┘              ○ D13│
+    └───────────────────────────────────────────────┘
+         ▲
+         └─ Conectar batería aquí (3.3V - 5V)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                  DIAGRAMA DE MONTAJE EN CARRO                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+                    Vista Lateral del Carro
+    
+    ┌───────────────────────────────────────────┐
+    │  Nivel 4  [Green Egg]  [Green Egg]        │
+    ├───────────────────────────────────────────┤
+    │  Nivel 3  [Green Egg]  [Green Egg]        │
+    ├───────────────────────────────────────────┤
+    │  Nivel 2  [Green Egg]  [Green Egg]        │
+    ├───────────────────────────────────────────┤
+    │  Nivel 1  [Green Egg]  [Green Egg]  ┌────┐│
+    │                                      │📦  ││ ← Dispositivo montado
+    └──────────────────────────────────────┴────┘│   con velcro industrial
+       │││  │││  │││  │││                        │
+       └┴┴──┴┴┴──┴┴┴──┴┴┘ Ruedas                 │
+    
+    UBICACIÓN RECOMENDADA:
+    • En un lateral del carro, nivel inferior
+    • Protegido de golpes directos
+    • Con la cara del sensor hacia arriba
+    • Fijado con velcro industrial fuerte
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        ESQUEMA DE CABLEADO                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    COLOR CODING (Recomendado):
+    
+    ROJO     → VCC / 3.3V / Positivo
+    NEGRO    → GND / Tierra / Negativo
+    AMARILLO → SCL / Clock
+    VERDE    → SDA / Data
+    AZUL     → MISO
+    BLANCO   → MOSI
+    MORADO   → CS
+    NARANJA  → SCK
+
+    Ejemplo de conexión real:
+    
+    ADXL345              Cable         ESP32
+    ───────              ─────         ─────
+    VCC   ──────────── ROJO ────────── 3.3V
+    GND   ──────────── NEGRO ──────── GND
+    SDA   ──────────── VERDE ──────── GPIO21
+    SCL   ──────────── AMARILLO ───── GPIO22
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    LISTA DE VERIFICACIÓN PRE-USO                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    □ Todas las conexiones están firmes
+    □ No hay cables sueltos
+    □ VCC está conectado a 3.3V (NO a 5V)
+    □ Todos los GND están conectados juntos
+    □ Tarjeta SD insertada y formateada en FAT32
+    □ Batería cargada completamente
+    □ Código subido al ESP32
+    □ WiFi configurado con credenciales correctas
+    □ Servidor corriendo en la computadora
+    □ Dashboard accesible en navegador
+    □ LED de encendido iluminado
+    □ Sensor ADXL345 detectado (verificar Monitor Serie)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         CONSEJOS DE SEGURIDAD                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    ⚠  NUNCA conectar VCC del ADXL345 a 5V - se dañará
+    ⚠  Verificar polaridad de la batería antes de conectar
+    ⚠  No invertir cables de alimentación (VCC/GND)
+    ⚠  Usar batería con protección contra sobrecarga
+    ⚠  Desconectar batería cuando no esté en uso
+    ⚠  No exponer el dispositivo a agua o humedad excesiva
+    ✓  Revisar conexiones periódicamente por desgaste
+    ✓  Mantener cables organizados y sin tensión
+
+
+═══════════════════════════════════════════════════════════════════════════
+                            FIN DEL DIAGRAMA
+═══════════════════════════════════════════════════════════════════════════
